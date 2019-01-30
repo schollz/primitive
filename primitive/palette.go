@@ -38,9 +38,9 @@ func NewColorPalette(hexes []string, names []string) (cp *ColorPalette, err erro
 func (cp *ColorPalette) ClosestColor(c Color) (closestColor Color, closestHex string, closestName string, err error) {
 	closestI := 0
 	bestScore := 100000.0
-	cMain := colorful.Color{float64(c.R) / 255.0, float64(c.G) / 255.0, float64(c.B) / 255.0}
+	cMain := colorful.Color{float64(c.R) / 257.0, float64(c.G) / 257.0, float64(c.B) / 257.0}
 	for i, c2 := range cp.rgbColors {
-		cPalette := colorful.Color{float64(c2.R) / 255.0, float64(c2.G) / 255.0, float64(c2.B) / 255.0}
+		cPalette := colorful.Color{float64(c2.R) / 257.0, float64(c2.G) / 257.0, float64(c2.B) / 257.0}
 		score := cMain.DistanceCIEDE2000(cPalette)
 		if score < bestScore {
 			bestScore = score
