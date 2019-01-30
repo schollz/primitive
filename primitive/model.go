@@ -112,8 +112,10 @@ func (model *Model) Add(shape Shape, alpha int) {
 	before := copyRGBA(model.Current)
 	lines := shape.Rasterize()
 	color := computeColor(model.Target, model.Current, lines, alpha)
+	c := color
 	if model.usingColorPalette {
-		color, _, _, _ = model.ColorPalette.ClosestColor(color)
+		c, _, _, _ = model.ColorPalette.ClosestColor(color)
+		fmt.Printf("%+v -> %+v\n", color, c)
 	}
 	drawLines(model.Current, color, lines)
 	score := differencePartial(model.Target, before, model.Current, model.Score, lines)
@@ -123,6 +125,7 @@ func (model *Model) Add(shape Shape, alpha int) {
 	model.Colors = append(model.Colors, color)
 	model.Scores = append(model.Scores, score)
 
+	color = c
 	model.Context.SetRGBA255(color.R, color.G, color.B, color.A)
 	shape.Draw(model.Context, model.Scale)
 }

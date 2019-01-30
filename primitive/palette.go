@@ -2,7 +2,8 @@ package primitive
 
 import (
 	"fmt"
-	"math"
+
+	colorful "github.com/lucasb-eyer/go-colorful"
 )
 
 // ColorPalette allows you to restrict
@@ -37,8 +38,10 @@ func NewColorPalette(hexes []string, names []string) (cp *ColorPalette, err erro
 func (cp *ColorPalette) ClosestColor(c Color) (closestColor Color, closestHex string, closestName string, err error) {
 	closestI := 0
 	bestScore := 100000.0
-	for i, rgb := range cp.rgbColors {
-		score := math.Pow(float64(rgb.R-c.R), 2)
+	cMain := colorful.Color{float64(c.R) / 255.0, float64(c.G) / 255.0, float64(c.B) / 255.0}
+	for i, c2 := range cp.rgbColors {
+		cPalette := colorful.Color{float64(c2.R) / 255.0, float64(c2.G) / 255.0, float64(c2.B) / 255.0}
+		score := cMain.DistanceCIEDE2000(cPalette)
 		if score < bestScore {
 			bestScore = score
 			closestI = i
