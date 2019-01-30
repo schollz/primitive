@@ -9,17 +9,20 @@ import (
 )
 
 type Model struct {
-	Sw, Sh     int
-	Scale      float64
-	Background Color
-	Target     *image.RGBA
-	Current    *image.RGBA
-	Context    *gg.Context
-	Score      float64
-	Shapes     []Shape
-	Colors     []Color
-	Scores     []float64
-	Workers    []*Worker
+	Sw, Sh       int
+	Scale        float64
+	Background   Color
+	Target       *image.RGBA
+	Current      *image.RGBA
+	Context      *gg.Context
+	ColorPalette *ColorPalette
+	Score        float64
+	Shapes       []Shape
+	Colors       []Color
+	Scores       []float64
+	Workers      []*Worker
+
+	usingColorPalette bool
 }
 
 func NewModel(target image.Image, background Color, size, numWorkers int) *Model {
@@ -52,6 +55,11 @@ func NewModel(target image.Image, background Color, size, numWorkers int) *Model
 		model.Workers = append(model.Workers, worker)
 	}
 	return model
+}
+
+func (m *Model) SetColorPalette(cp *ColorPalette) {
+	m.ColorPalette = cp
+	m.usingColorPalette = true
 }
 
 func (model *Model) newContext() *gg.Context {

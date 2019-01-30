@@ -14,7 +14,7 @@ type ColorPalette struct {
 }
 
 // NewColorPalette returns a new color palette
-func NewColorPalette(hexes []string, names ...string) (cp *ColorPalette, err error) {
+func NewColorPalette(hexes []string, names []string) (cp *ColorPalette, err error) {
 	cp = new(ColorPalette)
 	cp.hexStrings = hexes
 	if len(names) > 0 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -12,23 +13,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fogleman/primitive/primitive"
 	"github.com/nfnt/resize"
+	"github.com/schollz/primitive/primitive"
 )
 
 var (
-	Input      string
-	Outputs    flagArray
-	Background string
-	Configs    shapeConfigArray
-	Alpha      int
-	InputSize  int
-	OutputSize int
-	Mode       int
-	Workers    int
-	Nth        int
-	Repeat     int
-	V, VV      bool
+	Input       string
+	Outputs     flagArray
+	Background  string
+	Configs     shapeConfigArray
+	Alpha       int
+	InputSize   int
+	OutputSize  int
+	Mode        int
+	Workers     int
+	Nth         int
+	Repeat      int
+	V, VV       bool
+	PaletteFile string
 )
 
 type flagArray []string
@@ -63,6 +65,7 @@ func (i *shapeConfigArray) Set(value string) error {
 
 func init() {
 	flag.StringVar(&Input, "i", "", "input image path")
+	flag.StringVar(&PaletteFile, "p", "", "palette file path")
 	flag.Var(&Outputs, "o", "output image path")
 	flag.Var(&Configs, "n", "number of primitives")
 	flag.StringVar(&Background, "bg", "", "background color (hex)")
@@ -125,6 +128,34 @@ func main() {
 		primitive.LogLevel = 2
 	}
 
+	// read palette file
+	var cp *primitive.ColorPalette
+	if PaletteFile != "" {
+		file, err := os.Open(PaletteFile)
+		check(err)
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		hexes := []string{}
+		names := []string{}
+		for scanner.Scan() {
+			fields := strings.Fields(scanner.Text())
+			if len(fields) == 0 {
+				continue
+			}
+			hex := fields[0]
+			name := hex
+			if len(fields) > 1 {
+				name = fields[1]
+			}
+			hexes = append(hexes, hex)
+			names = append(names, name)
+		}
+		check(scanner.Err())
+		cp, err = primitive.NewColorPalette(hexes, names)
+		check(err)
+	}
+
 	// seed random number generator
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -151,9 +182,18 @@ func main() {
 	} else {
 		bg = primitive.MakeHexColor(Background)
 	}
+	if cp != nil {
+		var name string
+		bg, _, name, err = cp.ClosestColor(bg)
+		check(err)
+		primitive.Log(1, "changed background to %s", name)
+	}
 
 	// run algorithm
 	model := primitive.NewModel(input, bg, OutputSize, Workers)
+	if cp != nil {
+		model.SetColorPalette(cp)
+	}
 	primitive.Log(1, "%d: t=%.3f, score=%.6f\n", 0, 0.0, model.Score)
 	start := time.Now()
 	frame := 0
