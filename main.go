@@ -143,10 +143,13 @@ func main() {
 			if len(fields) == 0 {
 				continue
 			}
-			hex := fields[0]
-			name := hex
-			if len(fields) > 1 {
-				name = fields[1]
+			var hex, name string
+			if len(fields) == 1 {
+				hex = fields[0]
+				name = hex
+			} else {
+				name = fields[0]
+				hex = fields[1]
 			}
 			hexes = append(hexes, hex)
 			names = append(names, name)
