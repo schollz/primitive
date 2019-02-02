@@ -108,14 +108,13 @@ func (model *Model) SVG() string {
 	return strings.Join(lines, "\n")
 }
 
-func (model *Model) Add(shape Shape, alpha int) {
+func (model *Model) Add(shape Shape, alpha int) (name string) {
 	before := copyRGBA(model.Current)
 	lines := shape.Rasterize()
 	color := computeColor(model.Target, model.Current, lines, alpha)
 	c := color
 	if model.usingColorPalette {
-		c, _, _, _ = model.ColorPalette.ClosestColor(color)
-		fmt.Printf("%+v -> %+v\n", color, c)
+		c, _, name, _ = model.ColorPalette.ClosestColor(color)
 	}
 	drawLines(model.Current, color, lines)
 	score := differencePartial(model.Target, before, model.Current, model.Score, lines)
@@ -128,12 +127,13 @@ func (model *Model) Add(shape Shape, alpha int) {
 	color = c
 	model.Context.SetRGBA255(color.R, color.G, color.B, color.A)
 	shape.Draw(model.Context, model.Scale)
+	return
 }
 
-func (model *Model) Step(shapeType ShapeType, alpha, repeat int) int {
+func (model *Model) Step(shapeType ShapeType, alpha, repeat int) (counter int, name string) {
 	state := model.runWorkers(shapeType, alpha, 1000, 100, 16)
 	// state = HillClimb(state, 1000).(*State)
-	model.Add(state.Shape, state.Alpha)
+	name = model.Add(state.Shape, state.Alpha)
 
 	for i := 0; i < repeat; i++ {
 		state.Worker.Init(model.Current, model.Score)
@@ -143,7 +143,7 @@ func (model *Model) Step(shapeType ShapeType, alpha, repeat int) int {
 		if a == b {
 			break
 		}
-		model.Add(state.Shape, state.Alpha)
+		name = model.Add(state.Shape, state.Alpha)
 	}
 
 	// for _, w := range model.Workers[1:] {
@@ -151,11 +151,11 @@ func (model *Model) Step(shapeType ShapeType, alpha, repeat int) int {
 	// }
 	// SavePNG("heatmap.png", model.Workers[0].Heatmap.Image(0.5))
 
-	counter := 0
+	counter = 0
 	for _, worker := range model.Workers {
 		counter += worker.Counter
 	}
-	return counter
+	return
 }
 
 func (model *Model) runWorkers(t ShapeType, a, n, age, m int) *State {
